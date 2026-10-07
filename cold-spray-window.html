@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cold spray deposition window</title>
+<style>
+:root{
+  --panel:#eef0ef;
+  --plate:#ffffff;
+  --ink:#15201f;
+  --ink2:#5a6765;
+  --ink3:#8c9793;
+  --rule:#c9d0ce;
+  --rule2:#dde2e0;
+  --kinetic:#185fa5;
+  --kinetic-soft:#e6f1fb;
+  --hot:#9e2b25;
+  --sans:ui-sans-serif,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--panel);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.shell{max-width:1240px;margin:0 auto;padding:28px 24px 56px}
+header{border-bottom:1px solid var(--rule);padding-bottom:18px;margin-bottom:22px}
+h1{
+  font-size:25px;
+  font-weight:500;
+  letter-spacing:-0.022em;
+  margin:0 0 6px;
+}
+.lede{margin:0;color:var(--ink2);max-width:72ch}
+.layout{display:flex;gap:22px;align-items:flex-start}
+.rail{
+  flex:0 0 288px;
+  background:var(--plate);
+  border:1px solid var(--rule);
+  border-radius:3px;
+}
+.stage{flex:1 1 auto;min-width:0}
+fieldset{border:0;border-top:1px solid var(--rule2);margin:0;padding:14px 16px 16px}
+fieldset:first-of-type{border-top:0}
+legend{
+  padding:0;
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:2px;
+}
+.row{display:flex;align-items:center;gap:10px;margin-top:9px}
+.row label{flex:1 1 auto;color:var(--ink2);font-size:13px;min-width:0}
+.row input[type=number],.row select{
+  flex:0 0 92px;
+  font-family:var(--mono);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+  padding:5px 6px;
+  border:1px solid var(--rule);
+  border-radius:2px;
+  background:#fbfcfc;
+  color:var(--ink);
+}
+.row select{flex:0 0 132px;font-family:var(--sans)}
+.wide select{flex:1 1 auto;width:100%}
+.slide{margin-top:12px}
+.slide .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.slide .top span:first-child{color:var(--ink2);font-size:13px}
+.slide .top output{
+  font-family:var(--mono);
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+input[type=range]{width:100%;margin:6px 0 0;accent-color:var(--kinetic)}
+input:focus-visible,select:focus-visible,button:focus-visible,canvas:focus-visible{
+  outline:2px solid var(--kinetic);
+  outline-offset:1px;
+}
+.readout{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  background:var(--plate);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  margin-bottom:18px;
+}
+.cell{padding:12px 14px;border-left:1px solid var(--rule2);min-width:0}
+.cell:first-child{border-left:0}
+.cell .k{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .v{
+  font-family:var(--mono);
+  font-size:19px;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-0.01em;
+  margin-top:3px;
+  white-space:nowrap;
+}
+.cell .v.state{font-family:var(--sans);font-size:15px}
+.plate{
+  background:var(--plate);
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:14px 16px 10px;
+  margin-bottom:18px;
+}
+.plate h2{
+  font-size:14px;
+  font-weight:500;
+  margin:0 0 2px;
+}
+.plate p.hint{margin:0 0 10px;color:var(--ink3);font-size:12.5px}
+canvas{display:block;width:100%;touch-action:none}
+#map{cursor:crosshair}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{
+  font-family:var(--sans);
+  font-size:13px;
+  color:var(--ink);
+  background:#fbfcfc;
+  border:1px solid var(--rule);
+  border-radius:2px;
+  padding:6px 11px;
+  cursor:pointer;
+}
+button:hover{background:#f1f4f3;border-color:var(--ink3)}
+button:active{background:#e9edec}
+button.quiet{border-color:transparent;background:transparent;color:var(--ink2);padding:6px 4px}
+button.quiet:hover{color:var(--ink);background:transparent;text-decoration:underline}
+.notes{border-top:1px solid var(--rule);margin-top:34px;padding-top:20px;color:var(--ink2)}
+.notes h2{font-size:15px;font-weight:500;color:var(--ink);margin:0 0 10px}
+.notes h3{font-size:13.5px;font-weight:500;color:var(--ink);margin:18px 0 6px}
+.notes p,.notes li{max-width:84ch;font-size:13px}
+.notes ol,.notes ul{padding-left:20px;margin:6px 0}
+.notes code{font-family:var(--mono);font-size:12.5px;background:#e4e8e7;padding:1px 4px;border-radius:2px}
+.warn{color:var(--hot)}
+@media (max-width:1000px){
+  .layout{flex-direction:column}
+  .rail{flex:1 1 auto;width:100%}
+  .readout{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cell:nth-child(4){border-left:0}
+  .cell:nth-child(n+4){border-top:1px solid var(--rule2)}
+}
+@media (max-width:560px){
+  .readout{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cell:nth-child(odd){border-left:0}
+  .cell:nth-child(n+3){border-top:1px solid var(--rule2)}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header>
+  <h1>Cold spray deposition window</h1>
+  <p class="lede">A one-dimensional nozzle and particle model mapped onto the gas temperature and pressure plane. The shaded field is the ratio of particle impact velocity to critical velocity. Click the map to move the operating point.</p>
+</header>
+
+<div class="layout">
+
+  <form class="rail" id="rail" autocomplete="off">
+    <fieldset>
+      <legend>Powder</legend>
+      <div class="row wide"><select id="preset" aria-label="Material preset">
+        <option value="cu">Copper</option>
+        <option value="al1100">Aluminium 1100</option>
+        <option value="al6061">Aluminium 6061</option>
+        <option value="ti">Titanium, CP</option>
+        <option value="ti64">Ti-6Al-4V</option>
+        <option value="ss316">316L stainless</option>
+        <option value="ni">Nickel</option>
+        <option value="in625">Inconel 625</option>
+        <option value="ta">Tantalum</option>
+        <option value="mo">Molybdenum</option>
+        <option value="custom">Custom</option>
+      </select></div>
+      <div class="row"><label for="rho">Density, g/cm³</label><input type="number" id="rho" step="0.01" min="0.5" max="25" value="8.96"></div>
+      <div class="row"><label for="tm">Melting point, °C</label><input type="number" id="tm" step="1" min="100" max="4000" value="1085"></div>
+      <div class="row"><label for="su">Tensile strength, MPa</label><input type="number" id="su" step="5" min="10" max="2000" value="200"></div>
+      <div class="row"><label for="cp">Specific heat, J/kg·K</label><input type="number" id="cp" step="5" min="80" max="1200" value="385"></div>
+      <div class="row"><label for="d50">Median size d50, µm</label><input type="number" id="d50" step="1" min="2" max="100" value="25"></div>
+      <div class="row"><label for="gsd">Size spread, σ<sub>g</sub></label><input type="number" id="gsd" step="0.05" min="1.05" max="3" value="1.45"></div>
+      <div class="row"><label for="dmin">Fines cutoff, µm</label><input type="number" id="dmin" step="0.5" min="1" max="30" value="5"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Gas and nozzle</legend>
+      <div class="row wide"><select id="gas" aria-label="Carrier gas">
+        <option value="n2">Nitrogen</option>
+        <option value="he">Helium</option>
+        <option value="air">Air</option>
+      </select></div>
+      <div class="row"><label for="ar">Area ratio A<sub>e</sub>/A<sub>t</sub></label><input type="number" id="ar" step="0.1" min="1.5" max="20" value="5.8"></div>
+      <div class="row"><label for="ln">Divergent length, mm</label><input type="number" id="ln" step="5" min="20" max="400" value="130"></div>
+      <div class="row"><label for="cd">Drag coefficient</label><input type="number" id="cd" step="0.05" min="0.3" max="2" value="0.85"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Operating point</legend>
+      <div class="slide">
+        <div class="top"><span>Gas temperature</span><output id="t0Out" for="t0">700 °C</output></div>
+        <input type="range" id="t0" min="200" max="1000" step="5" value="700">
+      </div>
+      <div class="slide">
+        <div class="top"><span>Gas pressure</span><output id="p0Out" for="p0">3.5 MPa</output></div>
+        <input type="range" id="p0" min="1" max="5" step="0.05" value="3.5">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Map range</legend>
+      <div class="row"><label for="tmax">Temperature max, °C</label><input type="number" id="tmax" step="50" min="400" max="1200" value="1000"></div>
+      <div class="row"><label for="pmax">Pressure max, MPa</label><input type="number" id="pmax" step="0.5" min="2" max="10" value="5"></div>
+      <div class="row" style="margin-top:14px"><button type="button" class="quiet" id="reset">Reset to copper defaults</button></div>
+    </fieldset>
+  </form>
+
+  <div class="stage">
+
+    <div class="readout" id="readout">
+      <div class="cell"><div class="k">Impact velocity</div><div class="v" id="oVp">—</div></div>
+      <div class="cell"><div class="k">Critical velocity</div><div class="v" id="oVc">—</div></div>
+      <div class="cell"><div class="k">Ratio η</div><div class="v" id="oEta">—</div></div>
+      <div class="cell"><div class="k">Regime at d50</div><div class="v state" id="oState">—</div></div>
+      <div class="cell"><div class="k">Bonding size band</div><div class="v" id="oDcrit">—</div></div>
+      <div class="cell"><div class="k">Mass in band</div><div class="v" id="oDe">—</div></div>
+    </div>
+
+    <div class="plate">
+      <h2>Window of deposition</h2>
+      <p class="hint" id="subMap">—</p>
+      <canvas id="map" height="380" tabindex="0" role="img" aria-label="Map of the impact to critical velocity ratio across gas temperature and gas pressure"></canvas>
+    </div>
+
+    <div class="plate">
+      <h2>Velocity against particle size</h2>
+      <p class="hint">Impact and critical velocity both fall with size, at different rates. They cross at the largest size that still bonds.</p>
+      <canvas id="sweep" height="300" role="img" aria-label="Impact velocity and critical velocity plotted against particle diameter, with the bonding size window shaded"></canvas>
+    </div>
+
+    <div class="tools">
+      <button type="button" id="pngMap">Save map as PNG</button>
+      <button type="button" id="pngSweep">Save size plot as PNG</button>
+      <button type="button" id="csvMap">Export map grid as CSV</button>
+      <button type="button" id="csvSweep">Export size sweep as CSV</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="notes">
+  <h2>What the model does</h2>
+  <ol>
+    <li>Solves one-dimensional isentropic flow through a converging-diverging nozzle for the gas you select, giving local Mach number, temperature, pressure and density along the divergent section from the area ratio you enter.</li>
+    <li>Integrates the drag force balance <code>v_p dv_p/dz = (3/4) C_d ρ (v−v_p)|v−v_p| / (ρ_p d_p)</code> along that section, with a constant drag coefficient, to get particle velocity at the nozzle exit.</li>
+    <li>Integrates particle temperature over the same path using lumped capacitance with a Ranz-Marshall Nusselt number, started at throat conditions to approximate upstream powder injection. Impact temperature matters because it lowers the critical velocity.</li>
+    <li>Evaluates critical velocity from the Schmidt-Gärtner-Assadi correlation <code>v_cr = 667 − 14ρ + 0.08T_m + 0.1σ_u − 0.4T_i</code> with a size correction proportional to <code>d^−0.18</code> normalised at 25 µm.</li>
+    <li>Reports η, the ratio of impact to critical velocity. Coating characteristics have been shown to collapse onto a single function of η, which is what makes a temperature-pressure map with η contours a usable parameter selection tool.</li>
+  </ol>
+
+  <h3>A check you can run</h3>
+  <p>Select copper at 25 µm and drag the temperature down until particle impact temperature is near ambient. Critical velocity converges on roughly 640 m/s, which is the value measured by laser two-focus velocimetry for copper at Sandia, where deposition efficiencies reached 95 percent above it. An independently measured number falling out of the correlation is the reason to trust the rest of the chain.</p>
+
+  <h3>Limits you should state before anyone finds them</h3>
+  <ul>
+    <li>The critical velocity correlation is a small-perturbation expression anchored on copper. It degrades as material properties move away from copper, so treat titanium, nickel alloys and especially the refractory presets as <span class="warn">indicative only</span>.</li>
+    <li>No bow shock. Impact velocity is taken as nozzle exit velocity, which measurement supports at ordinary standoff but which fails at short standoff or with very fine powder. The fines cutoff is a crude stand-in for particles lost to the shock and the plume; it is a dial, not a prediction.</li>
+    <li>The bonding band has two edges and they are not equally trustworthy. The fine edge emerges from the physics: small particles track the cooling gas, stay cold, and so carry a high critical velocity they cannot quite reach. The coarse edge runs optimistic, because drag coefficient is held constant and the critical velocity correlation is being extrapolated to impact temperatures well beyond where it was fitted. Read a coarse edge reported above the plotted range as not velocity-limited here, not as everything sticks.</li>
+    <li>The mass-in-band figure is an upper bound on deposition efficiency, taken as the mass fraction of a lognormal size distribution lying inside the band. At a well-chosen operating point it saturates near 100 percent, which is consistent with measured efficiencies for copper but means the discriminating information is the band edges rather than the percentage. It ignores tamping, re-erosion and in-flight oxidation.</li>
+    <li>No nozzle wall friction, no shock structure in the divergent section, no gas-particle loading effect, no atmospheric entrainment in the free jet. All four cost real velocity, so the model runs optimistic.</li>
+    <li>Gas transport properties are single representative values, not temperature-dependent.</li>
+  </ul>
+
+  <h3>Sources for the two correlations</h3>
+  <ul>
+    <li>Schmidt, Gärtner, Assadi and Kreye, Development of a generalized parameter window for cold spray deposition, Acta Materialia 54 (2006) 729. doi:10.1016/j.actamat.2005.10.005</li>
+    <li>Assadi and colleagues, On parameter selection in cold spraying, Journal of Thermal Spray Technology (2011). doi:10.1007/s11666-011-9662-9</li>
+    <li>Dykhuizen, Gilmore, Neiser, Roemer and Smith, Particle velocity and deposition efficiency in the cold spray process, Journal of Thermal Spray Technology 8 (1999). doi:10.1361/105996399770350278</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var GAS={
+  n2 :{name:"nitrogen",g:1.40,R:296.8,k:0.045,mu:2.9e-5,Pr:0.71},
+  he :{name:"helium",  g:1.667,R:2077, k:0.250,mu:3.4e-5,Pr:0.68},
+  air:{name:"air",     g:1.40,R:287.0,k:0.042,mu:2.9e-5,Pr:0.71}
+};
+
+var PRESET={
+  cu    :{rho:8.96,tm:1085,su:200,cp:385},
+  al1100:{rho:2.70,tm:660, su:110,cp:900},
+  al6061:{rho:2.70,tm:652, su:310,cp:896},
+  ti    :{rho:4.51,tm:1668,su:350,cp:520},
+  ti64  :{rho:4.43,tm:1660,su:950,cp:553},
+  ss316 :{rho:8.00,tm:1400,su:550,cp:500},
+  ni    :{rho:8.90,tm:1455,su:450,cp:440},
+  in625 :{rho:8.44,tm:1350,su:830,cp:410},
+  ta    :{rho:16.6,tm:3017,su:200,cp:140},
+  mo    :{rho:10.22,tm:2623,su:450,cp:250}
+};
+
+var NSTEP=140, NX=100, NY=64;
+var EDGE=[0.6,0.8,1.0,1.2,1.5,1.8,2.2,2.5];
+var BAND=["#eceeed","#dfe3e2","#ccd3d1","#cfe0f3","#a9cbec","#6ea7df","#2f7cc4","#185fa5","#9e2b25"];
+
+var $=function(id){return document.getElementById(id);};
+
+// --- gas dynamics -------------------------------------------------------
+function areaRatio(M,g){
+  return (1/M)*Math.pow((2/(g+1))*(1+(g-1)/2*M*M),(g+1)/(2*(g-1)));
+}
+function machSupersonic(ar,g){
+  var lo=1.0001, hi=12, mid, i;
+  for(i=0;i<60;i++){ mid=(lo+hi)/2; if(areaRatio(mid,g)<ar) lo=mid; else hi=mid; }
+  return (lo+hi)/2;
+}
+var profCache={};
+function profile(gasKey,ar){
+  var key=gasKey+"|"+ar.toFixed(3);
+  if(profCache[key]) return profCache[key];
+  var g=GAS[gasKey].g, out=new Float64Array(NSTEP+1), i;
+  for(i=0;i<=NSTEP;i++) out[i]=machSupersonic(1+(ar-1)*i/NSTEP,g);
+  profCache[key]=out;
+  return out;
+}
+
+// --- particle solve -----------------------------------------------------
+function solve(t0c,p0mpa,dum,S){
+  var G=GAS[S.gas], pr=profile(S.gas,S.ar);
+  var T0=t0c+273.15, P0=p0mpa*1e6, d=dum*1e-6, L=S.ln/1000, dz=L/NSTEP;
+  var rp=S.rho*1000;
+  var vp=25, Tp=T0/(1+(G.g-1)/2);
+  var i,M,T,p,rho,vg,dv,next,Re,Nu,h;
+  for(i=0;i<NSTEP;i++){
+    M=pr[i];
+    T=T0/(1+(G.g-1)/2*M*M);
+    p=P0*Math.pow(T/T0,G.g/(G.g-1));
+    rho=p/(G.R*T);
+    vg=M*Math.sqrt(G.g*G.R*T);
+    dv=vg-vp;
+    next=vp+0.75*S.cd*rho*dv*Math.abs(dv)/(rp*d*vp)*dz;
+    if(next>vg*0.99) next=vg*0.99;
+    if(next<10) next=10;
+    Re=rho*Math.abs(dv)*d/G.mu;
+    Nu=2+0.6*Math.sqrt(Re)*Math.cbrt(G.Pr);
+    h=Nu*G.k/d;
+    Tp+=6*h*(T-Tp)/(rp*S.cp*d*vp)*dz;
+    vp=next;
+  }
+  var Me=pr[NSTEP];
+  var Te=T0/(1+(G.g-1)/2*Me*Me);
+  var vgExit=Me*Math.sqrt(G.g*G.R*Te);
+  var Tpi=Tp-273.15;
+  var vcr=667-14*S.rho+0.08*S.tm+0.1*S.su-0.4*Tpi;
+  if(vcr<80) vcr=80;
+  vcr*=Math.pow(25/dum,0.18);
+  return {vp:vp,vcr:vcr,eta:vp/vcr,Tpi:Tpi,Me:Me,vg:vgExit};
+}
+
+function settings(){
+  return {
+    gas:$("gas").value,
+    ar:+$("ar").value, ln:+$("ln").value, cd:+$("cd").value,
+    rho:+$("rho").value, tm:+$("tm").value, su:+$("su").value, cp:+$("cp").value
+  };
+}
+function bandOf(e){ var i=0; while(i<EDGE.length && e>=EDGE[i]) i++; return i; }
+
+// --- size sweep and deposition estimate ---------------------------------
+var SWEEP_LO=2, SWEEP_HI=100, SWEEP_N=98;
+function sweep(S,t0,p0){
+  var out=[],i,d,r;
+  for(i=0;i<=SWEEP_N;i++){
+    d=SWEEP_LO+(SWEEP_HI-SWEEP_LO)*i/SWEEP_N;
+    r=solve(t0,p0,d,S);
+    out.push({d:d,vp:r.vp,vcr:r.vcr});
+  }
+  return out;
+}
+function bondingBand(sw){
+  var i,a,b,lo=null,hi=null;
+  if(sw[0].vp>=sw[0].vcr) lo=sw[0].d;
+  for(i=0;i<sw.length-1;i++){
+    a=sw[i].vp-sw[i].vcr; b=sw[i+1].vp-sw[i+1].vcr;
+    var x=sw[i].d+(sw[i+1].d-sw[i].d)*a/(a-b);
+    if(lo===null && a<0 && b>=0){ lo=x; continue; }
+    if(lo!==null && hi===null && a>=0 && b<0){ hi=x; break; }
+  }
+  if(lo===null) return null;
+  if(hi===null) hi=Infinity;
+  return {lo:lo,hi:hi};
+}
+function erf(x){
+  var s=x<0?-1:1, ax=Math.abs(x);
+  var t=1/(1+0.3275911*ax);
+  var y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-ax*ax);
+  return s*y;
+}
+function lognormCdf(d,d50,gsd){
+  if(d<=0) return 0;
+  if(gsd<=1.001) return d<d50?0:1;
+  return 0.5*(1+erf(Math.log(d/d50)/(Math.SQRT2*Math.log(gsd))));
+}
+function pdfLognorm(d,d50,gsd){
+  if(d<=0||gsd<=1.001) return 0;
+  var s=Math.log(gsd), z=Math.log(d/d50)/s;
+  return Math.exp(-0.5*z*z)/(d*s*Math.sqrt(2*Math.PI));
+}
+
+// --- canvas helpers -----------------------------------------------------
+function fit(cv,h){
+  var dpr=window.devicePixelRatio||1;
+  var w=cv.clientWidth||600;
+  cv.width=Math.round(w*dpr);
+  cv.height=Math.round(h*dpr);
+  cv.style.height=h+"px";
+  var ctx=cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(0,0,w,h);
+  return {ctx:ctx,w:w,h:h};
+}
+function axisText(ctx){ ctx.font="11.5px "+getComputedStyle(document.body).fontFamily; }
+
+// --- state --------------------------------------------------------------
+var field=null, fieldMeta=null, sw=null, mapGeom=null;
+
+function rebuild(){
+  var S=settings(), d50=+$("d50").value;
+  var tmax=+$("tmax").value, pmax=+$("pmax").value;
+  var tmin=200, pmin=1;
+  if(tmax<=tmin+50){ tmax=tmin+50; }
+  if(pmax<=pmin+0.5){ pmax=pmin+0.5; }
+  field=new Float32Array(NX*NY);
+  var i,j,t,p;
+  for(j=0;j<NY;j++){
+    p=pmin+(pmax-pmin)*(j+0.5)/NY;
+    for(i=0;i<NX;i++){
+      t=tmin+(tmax-tmin)*(i+0.5)/NX;
+      field[j*NX+i]=solve(t,p,d50,S).eta;
+    }
+  }
+  fieldMeta={tmin:tmin,tmax:tmax,pmin:pmin,pmax:pmax,d50:d50};
+  sw=sweep(S,+$("t0").value,+$("p0").value);
+}
+
+function drawMap(){
+  var cv=$("map"), g=fit(cv,380), ctx=g.ctx, W=g.w, H=g.h;
+  var L=54, R=W-92, T=16, B=H-44;
+  if(R-L<80){ R=W-8; }
+  var m=fieldMeta;
+  var cw=(R-L)/NX, ch=(B-T)/NY, i, j;
+  for(j=0;j<NY;j++){
+    for(i=0;i<NX;i++){
+      ctx.fillStyle=BAND[bandOf(field[j*NX+i])];
+      ctx.fillRect(L+i*cw-0.5, B-(j+1)*ch-0.5, cw+1, ch+1);
+    }
+  }
+  mapGeom={L:L,R:R,T:T,B:B};
+
+  var targets=[[1,"η = 1"],[1.5,"η = 1.5"],[2.5,"η = 2.5"]];
+  axisText(ctx);
+  targets.forEach(function(tg){
+    var val=tg[0], started=false, lx=0, ly=0, hit, a, b;
+    ctx.beginPath();
+    for(i=0;i<NX;i++){
+      hit=-1;
+      for(j=0;j<NY-1;j++){
+        a=field[j*NX+i]; b=field[(j+1)*NX+i];
+        if((a<val&&b>=val)||(a>=val&&b<val)){ hit=j+(val-a)/(b-a); break; }
+      }
+      if(hit>=0){
+        var x=L+(i+0.5)*cw, y=B-(hit+0.5)*ch;
+        if(!started){ ctx.moveTo(x,y); started=true; } else { ctx.lineTo(x,y); }
+        lx=x; ly=y;
+      }
+    }
+    if(started){
+      ctx.strokeStyle=val>=2.5?"#5e1a16":"#15201f";
+      ctx.lineWidth=1.25;
+      ctx.setLineDash(val===1?[]:[4,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=val>=2.5?"#5e1a16":"#15201f";
+      ctx.textAlign="right"; ctx.textBaseline="bottom";
+      if(lx>L+48) ctx.fillText(tg[1], Math.min(lx-2,R-3), ly-3);
+    }
+  });
+
+  ctx.strokeStyle="#9aa5a2"; ctx.lineWidth=1;
+  ctx.strokeRect(L+0.5,T+0.5,R-L-1,B-T-1);
+
+  var t0=+$("t0").value, p0=+$("p0").value;
+  var mx=L+(t0-m.tmin)/(m.tmax-m.tmin)*(R-L);
+  var my=B-(p0-m.pmin)/(m.pmax-m.pmin)*(B-T);
+  if(mx>=L&&mx<=R&&my>=T&&my<=B){
+    ctx.strokeStyle="rgba(21,32,31,0.45)"; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(L,my); ctx.lineTo(mx,my); ctx.moveTo(mx,B); ctx.lineTo(mx,my); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(mx,my,6,0,Math.PI*2);
+    ctx.fillStyle="#15201f"; ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle="#ffffff"; ctx.stroke();
+  }
+
+  axisText(ctx);
+  ctx.fillStyle="#5a6765"; ctx.strokeStyle="#9aa5a2";
+  ctx.textAlign="center"; ctx.textBaseline="top";
+  var tickT=niceTicks(m.tmin,m.tmax,5), k;
+  for(k=0;k<tickT.length;k++){
+    var xx=L+(tickT[k]-m.tmin)/(m.tmax-m.tmin)*(R-L);
+    ctx.beginPath(); ctx.moveTo(xx,B); ctx.lineTo(xx,B+4); ctx.stroke();
+    ctx.fillText(String(Math.round(tickT[k])),xx,B+7);
+  }
+  ctx.fillText("gas temperature, °C",(L+R)/2,B+24);
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  var tickP=niceTicks(m.pmin,m.pmax,5);
+  for(k=0;k<tickP.length;k++){
+    var yy=B-(tickP[k]-m.pmin)/(m.pmax-m.pmin)*(B-T);
+    ctx.beginPath(); ctx.moveTo(L-4,yy); ctx.lineTo(L,yy); ctx.stroke();
+    ctx.fillText(tickP[k].toFixed(tickP[k]%1?1:0),L-7,yy);
+  }
+  ctx.textAlign="left"; ctx.textBaseline="top";
+  ctx.fillText("MPa",6,T);
+
+  if(W-R>70){
+    var bx=R+22, bw=18, bh=(B-T)/BAND.length, n;
+    for(n=0;n<BAND.length;n++){
+      ctx.fillStyle=BAND[n];
+      ctx.fillRect(bx,B-(n+1)*bh,bw,bh+0.5);
+    }
+    ctx.strokeStyle="#9aa5a2"; ctx.lineWidth=1;
+    ctx.strokeRect(bx+0.5,T+0.5,bw-1,B-T-1);
+    ctx.fillStyle="#5a6765"; ctx.textAlign="left"; ctx.textBaseline="middle";
+    for(n=0;n<EDGE.length;n++){
+      ctx.fillText(EDGE[n].toFixed(1),bx+bw+5,B-(n+1)*bh);
+    }
+    ctx.textBaseline="bottom";
+    ctx.fillText("η",bx,T-3);
+  }
+}
+
+function niceTicks(a,b,want){
+  var span=b-a, raw=span/want, mag=Math.pow(10,Math.floor(Math.log(raw)/Math.LN10));
+  var norm=raw/mag, step;
+  if(norm<1.5) step=1*mag; else if(norm<3) step=2*mag; else if(norm<7) step=5*mag; else step=10*mag;
+  var out=[], v=Math.ceil(a/step)*step;
+  while(v<=b+1e-9){ out.push(v); v+=step; }
+  return out;
+}
+
+function drawSweep(){
+  var cv=$("sweep"), g=fit(cv,300), ctx=g.ctx, W=g.w, H=g.h;
+  var L=54, R=W-14, T=16, B=H-44;
+  var d50=+$("d50").value, gsd=+$("gsd").value, dmin=+$("dmin").value;
+  var vmax=0,i;
+  for(i=0;i<sw.length;i++){ vmax=Math.max(vmax,sw[i].vp,sw[i].vcr); }
+  vmax=Math.ceil(vmax/100)*100+100;
+  var X=function(d){ return L+(d-SWEEP_LO)/(SWEEP_HI-SWEEP_LO)*(R-L); };
+  var Y=function(v){ return B-v/vmax*(B-T); };
+
+  var band=bondingBand(sw), bLo=null, bHi=null;
+  if(band!==null){
+    bLo=Math.max(band.lo,dmin);
+    bHi=Math.min(isFinite(band.hi)?band.hi:SWEEP_HI,SWEEP_HI);
+    if(bHi>bLo){
+      ctx.fillStyle="#e6f1fb";
+      ctx.fillRect(X(bLo),T,X(bHi)-X(bLo),B-T);
+      ctx.strokeStyle="#a9cbec"; ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(X(bLo)+0.5,T); ctx.lineTo(X(bLo)+0.5,B);
+      ctx.moveTo(X(bHi)-0.5,T); ctx.lineTo(X(bHi)-0.5,B);
+      ctx.stroke();
+    }
+  }
+
+  ctx.strokeStyle="#e4e8e7"; ctx.lineWidth=1;
+  var tv=niceTicks(0,vmax,5);
+  for(i=0;i<tv.length;i++){
+    var yy=Y(tv[i]);
+    ctx.beginPath(); ctx.moveTo(L,yy); ctx.lineTo(R,yy); ctx.stroke();
+  }
+
+  var pmax=0;
+  for(i=0;i<sw.length;i++) pmax=Math.max(pmax,pdfLognorm(sw[i].d,d50,gsd));
+  if(pmax>0){
+    ctx.beginPath();
+    for(i=0;i<sw.length;i++){
+      var py=B-pdfLognorm(sw[i].d,d50,gsd)/pmax*(B-T)*0.3;
+      if(i===0) ctx.moveTo(X(sw[i].d),py); else ctx.lineTo(X(sw[i].d),py);
+    }
+    ctx.lineTo(X(SWEEP_HI),B); ctx.lineTo(X(SWEEP_LO),B); ctx.closePath();
+    ctx.fillStyle="rgba(140,151,147,0.20)"; ctx.fill();
+  }
+
+  function curve(key,color,dash){
+    ctx.beginPath();
+    for(i=0;i<sw.length;i++){
+      var x=X(sw[i].d), y=Y(sw[i][key]);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.setLineDash(dash); ctx.lineJoin="round";
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  curve("vp","#185fa5",[]);
+  curve("vcr","#9e2b25",[5,4]);
+
+  if(band!==null){
+    var S2=settings(), t0v=+$("t0").value, p0v=+$("p0").value;
+    [band.lo,band.hi].forEach(function(dd){
+      if(!isFinite(dd)||dd<SWEEP_LO||dd>SWEEP_HI) return;
+      var rr=solve(t0v,p0v,dd,S2);
+      ctx.beginPath(); ctx.arc(X(dd),Y(rr.vp),5,0,Math.PI*2);
+      ctx.fillStyle="#15201f"; ctx.fill();
+      ctx.lineWidth=2; ctx.strokeStyle="#ffffff"; ctx.stroke();
+    });
+  }
+
+  ctx.strokeStyle="#9aa5a2"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(L,T); ctx.lineTo(L,B); ctx.lineTo(R,B); ctx.stroke();
+
+  axisText(ctx);
+  ctx.fillStyle="#5a6765";
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(i=0;i<tv.length;i++) ctx.fillText(String(Math.round(tv[i])),L-7,Y(tv[i]));
+  ctx.textAlign="center"; ctx.textBaseline="top";
+  var td=niceTicks(SWEEP_LO,SWEEP_HI,6);
+  for(i=0;i<td.length;i++){
+    var xx=X(td[i]);
+    ctx.beginPath(); ctx.strokeStyle="#9aa5a2"; ctx.moveTo(xx,B); ctx.lineTo(xx,B+4); ctx.stroke();
+    ctx.fillText(String(Math.round(td[i])),xx,B+7);
+  }
+  ctx.fillText("particle diameter, µm",(L+R)/2,B+24);
+  ctx.textAlign="left"; ctx.textBaseline="top";
+  ctx.fillText("m/s",6,T);
+
+  var lx=R-8, ly=T+4;
+  ctx.textAlign="right"; ctx.textBaseline="top";
+  ctx.fillStyle="#185fa5"; ctx.fillText("impact velocity",lx,ly);
+  ctx.fillStyle="#9e2b25"; ctx.fillText("critical velocity",lx,ly+16);
+  ctx.fillStyle="#8c9793"; ctx.fillText("size distribution",lx,ly+32);
+}
+
+function updateReadout(){
+  var S=settings(), d50=+$("d50").value, gsd=+$("gsd").value, dmin=+$("dmin").value;
+  var t0=+$("t0").value, p0=+$("p0").value;
+  var r=solve(t0,p0,d50,S);
+  $("oVp").textContent=Math.round(r.vp)+" m/s";
+  $("oVc").textContent=Math.round(r.vcr)+" m/s";
+  $("oEta").textContent=r.eta.toFixed(2);
+
+  var st=$("oState");
+  if(r.eta<1){ st.textContent="rebound"; st.style.color="#5a6765"; }
+  else if(r.eta<1.5){ st.textContent="bonding onset"; st.style.color="#8a5a12"; }
+  else if(r.eta<2.5){ st.textContent="dense deposit"; st.style.color="#185fa5"; }
+  else { st.textContent="erosion risk"; st.style.color="#9e2b25"; }
+
+  var band=bondingBand(sw);
+  if(band===null){
+    $("oDcrit").textContent="none";
+    $("oDe").textContent="0%";
+  } else {
+    var lo=Math.max(band.lo,dmin);
+    var hiTxt=(!isFinite(band.hi)||band.hi>=SWEEP_HI)?"> "+SWEEP_HI:band.hi.toFixed(0);
+    $("oDcrit").textContent=lo.toFixed(1)+" – "+hiTxt+" µm";
+    var hiNum=(!isFinite(band.hi))?1e6:band.hi;
+    var frac=lognormCdf(hiNum,d50,gsd)-lognormCdf(lo,d50,gsd);
+    $("oDe").textContent=Math.round(Math.max(0,Math.min(1,frac))*100)+"%";
+  }
+
+  $("subMap").textContent=
+    GAS[S.gas].name+", area ratio "+S.ar.toFixed(1)+
+    ", exit Mach "+r.Me.toFixed(2)+
+    ", gas exit velocity "+Math.round(r.vg)+" m/s"+
+    ", particle impact temperature "+Math.round(r.Tpi)+" °C"+
+    ", at d50 = "+d50+" µm";
+}
+
+function fullRefresh(){
+  rebuild(); drawMap(); drawSweep(); updateReadout();
+}
+function pointRefresh(){
+  sw=sweep(settings(),+$("t0").value,+$("p0").value);
+  drawMap(); drawSweep(); updateReadout();
+}
+
+// --- wiring -------------------------------------------------------------
+["rho","tm","su","cp","d50","gsd","dmin","ar","ln","cd","tmax","pmax"].forEach(function(id){
+  $(id).addEventListener("input",function(){
+    if(["rho","tm","su","cp"].indexOf(id)>=0) $("preset").value="custom";
+    fullRefresh();
+  });
+});
+$("gas").addEventListener("change",fullRefresh);
+$("preset").addEventListener("change",function(){
+  var p=PRESET[$("preset").value];
+  if(!p) return;
+  $("rho").value=p.rho; $("tm").value=p.tm; $("su").value=p.su; $("cp").value=p.cp;
+  fullRefresh();
+});
+$("t0").addEventListener("input",function(e){
+  $("t0Out").textContent=e.target.value+" °C";
+  pointRefresh();
+});
+$("p0").addEventListener("input",function(e){
+  $("p0Out").textContent=(+e.target.value).toFixed(2)+" MPa";
+  pointRefresh();
+});
+$("reset").addEventListener("click",function(){
+  $("preset").value="cu";
+  var p=PRESET.cu;
+  $("rho").value=p.rho; $("tm").value=p.tm; $("su").value=p.su; $("cp").value=p.cp;
+  $("d50").value=25; $("gsd").value=1.45; $("dmin").value=5;
+  $("gas").value="n2"; $("ar").value=5.8; $("ln").value=130; $("cd").value=0.85;
+  $("t0").value=700; $("p0").value=3.5; $("tmax").value=1000; $("pmax").value=5;
+  $("t0Out").textContent="700 °C"; $("p0Out").textContent="3.50 MPa";
+  fullRefresh();
+});
+
+function setFromMap(ev){
+  if(!mapGeom||!fieldMeta) return;
+  var rect=$("map").getBoundingClientRect();
+  var x=ev.clientX-rect.left, y=ev.clientY-rect.top;
+  var G=mapGeom, m=fieldMeta;
+  if(x<G.L-6||x>G.R+6||y<G.T-6||y>G.B+6) return;
+  var t=m.tmin+(Math.min(Math.max(x,G.L),G.R)-G.L)/(G.R-G.L)*(m.tmax-m.tmin);
+  var p=m.pmin+(G.B-Math.min(Math.max(y,G.T),G.B))/(G.B-G.T)*(m.pmax-m.pmin);
+  t=Math.min(Math.max(Math.round(t/5)*5,+$("t0").min),+$("t0").max);
+  p=Math.min(Math.max(Math.round(p*20)/20,+$("p0").min),+$("p0").max);
+  $("t0").value=t; $("p0").value=p;
+  $("t0Out").textContent=t+" °C";
+  $("p0Out").textContent=p.toFixed(2)+" MPa";
+  pointRefresh();
+}
+var dragging=false;
+$("map").addEventListener("pointerdown",function(e){ dragging=true; $("map").setPointerCapture(e.pointerId); setFromMap(e); });
+$("map").addEventListener("pointermove",function(e){ if(dragging) setFromMap(e); });
+$("map").addEventListener("pointerup",function(e){ dragging=false; });
+$("map").addEventListener("keydown",function(e){
+  var t=+$("t0").value, p=+$("p0").value, step=e.shiftKey?5:1, used=true;
+  if(e.key==="ArrowLeft") t-=5*step;
+  else if(e.key==="ArrowRight") t+=5*step;
+  else if(e.key==="ArrowUp") p+=0.05*step;
+  else if(e.key==="ArrowDown") p-=0.05*step;
+  else used=false;
+  if(!used) return;
+  e.preventDefault();
+  t=Math.min(Math.max(t,+$("t0").min),+$("t0").max);
+  p=Math.min(Math.max(p,+$("p0").min),+$("p0").max);
+  $("t0").value=t; $("p0").value=p;
+  $("t0Out").textContent=t+" °C";
+  $("p0Out").textContent=p.toFixed(2)+" MPa";
+  pointRefresh();
+});
+
+function download(name,blob){
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },0);
+}
+function savePng(cv,name){
+  cv.toBlob(function(b){ if(b) download(name,b); },"image/png");
+}
+function stamp(){
+  var S=settings();
+  return "# cold spray deposition window\n"+
+    "# gas,"+GAS[S.gas].name+"\n"+
+    "# area_ratio,"+S.ar+"\n# divergent_length_mm,"+S.ln+"\n# drag_coefficient,"+S.cd+"\n"+
+    "# density_g_cm3,"+S.rho+"\n# melting_point_C,"+S.tm+"\n# tensile_MPa,"+S.su+"\n# cp_J_kgK,"+S.cp+"\n"+
+    "# d50_um,"+$("d50").value+"\n# sigma_g,"+$("gsd").value+"\n# fines_cutoff_um,"+$("dmin").value+"\n";
+}
+$("pngMap").addEventListener("click",function(){ savePng($("map"),"deposition-window-map.png"); });
+$("pngSweep").addEventListener("click",function(){ savePng($("sweep"),"velocity-vs-size.png"); });
+$("csvMap").addEventListener("click",function(){
+  var m=fieldMeta, lines=[stamp()+"gas_temperature_C,gas_pressure_MPa,eta"], i, j;
+  for(j=0;j<NY;j++){
+    var p=m.pmin+(m.pmax-m.pmin)*(j+0.5)/NY;
+    for(i=0;i<NX;i++){
+      var t=m.tmin+(m.tmax-m.tmin)*(i+0.5)/NX;
+      lines.push(t.toFixed(1)+","+p.toFixed(3)+","+field[j*NX+i].toFixed(4));
+    }
+  }
+  download("deposition-window-grid.csv",new Blob([lines.join("\n")],{type:"text/csv"}));
+});
+$("csvSweep").addEventListener("click",function(){
+  var lines=[stamp()+"# gas_temperature_C,"+$("t0").value+"\n# gas_pressure_MPa,"+$("p0").value+"\n"+
+    "diameter_um,impact_velocity_m_s,critical_velocity_m_s,eta"], i;
+  for(i=0;i<sw.length;i++){
+    lines.push(sw[i].d.toFixed(2)+","+sw[i].vp.toFixed(1)+","+sw[i].vcr.toFixed(1)+","+(sw[i].vp/sw[i].vcr).toFixed(4));
+  }
+  download("velocity-vs-size.csv",new Blob([lines.join("\n")],{type:"text/csv"}));
+});
+
+var rt=null;
+window.addEventListener("resize",function(){
+  clearTimeout(rt);
+  rt=setTimeout(function(){ drawMap(); drawSweep(); },120);
+});
+
+fullRefresh();
+})();
+</script>
+</body>
+</html>
